@@ -1,6 +1,23 @@
 import React,{ useState,useReducer } from 'react';
 import './App.css'
 
+/*
+STATUS UPDATER FUNCTION
+1.secretArr --> The array which contains the letters in the secret. 
+2.Traversing through each element in the current row of the grid.
+3.Traverse through each element --> check for the green spots--->
+ remove them from secretArr--> track wheather all (5) elements are green--->
+ if not follow step 4
+
+4. Traverse through each element ---> check for yellow spots---> remove item from secret Arr--->
+if secretArr is not empty goto step 5.
+
+5. for remaining elements set status color 'grey'
+
+Total traversals: 3
+*/
+
+
 //---GRID------------------------
 const gridGenerator = () => {
   let grid = [], row = [];

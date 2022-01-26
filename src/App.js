@@ -1,7 +1,11 @@
-import React,{ useState,useReducer } from 'react';
+import React,{ useState,useReducer,useEffect } from 'react';
 import './App.css'
 import KeyBoard from './components/KeyBoard';
-
+/*
+to do:
+1.backspace button *
+2.keyboard color change
+*/
 
 //---GRID------------------------
 const gridGenerator = () => {
@@ -19,35 +23,103 @@ const gridGenerator = () => {
   }
   return grid;
 }
-//-------------------------------------
-
-
-
-
-
-
 
 //---------------------------------------
 const App = () => {
   const [currentRow,setCurrentRow] = useState(0)
   const [currentCell, setCurrentCell] = useState(0)
   const [flag,setFlag] = useState(0)
+  const [enterKey, setEnterKey] = useState(0)
+  const [backspaceKey, setBackspaceKey] = useState(0)
+  const [keyPress, setKeyPress] = useState([''])
   const intializeGridState = gridGenerator()
 
 //-----------------------------------------------------------
 
+  const handleKeyDown = (event) => {
+    event.preventDefault();
+    if (event.keyCode >= 65 && event.keyCode <= 90) {
+      setKeyPress([String.fromCharCode(event.keyCode)])
+     
+      
+  }
+  else if (event.keyCode === 13) {
+    setEnterKey(prevState=>!prevState)
   
-  
-  
+    }
+    else if (event.keyCode === 8) {
+      setBackspaceKey(prevState=>!prevState)
+  }
+};
 
-  
+useEffect(() => {
+  window.addEventListener('keydown', handleKeyDown);
 
+  // cleanup this component
+  return () => {
+  window.removeEventListener('keydown', handleKeyDown);
+  };
+}, []);
+  
+  useEffect(() => {
+    statusUpdateHandler();
+},[enterKey])
+
+useEffect(() => {
+  deleteHandler();
+},[backspaceKey])
+  
+  useEffect(() => {
+    contentHandler();
+  },[keyPress])
+
+
+//------------------------
+  const deleteHandler = () => {
+    console.log("delete key");
+    if (flag === 0 && currentRow === 0) { 
+      gridDispatcher({
+        type: 'type1',
+        currentRow,
+        currentCell,
+        content: ""
+      });
+      return;
+    }
+    console.log("dispatching delete key");
+    setCurrentCell(flag - 1);
+    setFlag(flag - 1);
+    gridDispatcher({
+      type: 'type1',
+      currentRow,
+      currentCell: flag-1,
+      content: ""
+    });
+
+  }
+
+
+
+  //--------------------
+  const contentHandler = () => {
+    if (currentRow > 5 || flag>4 || keyPress[0] === '') {
+      return;
+    }
+    gridDispatcher({
+      type: 'type1',
+      currentRow,
+      currentCell,
+      content: keyPress[0]
+    })
+    setCurrentCell(prevState => (prevState + 1) % 5)
+    setFlag(prevState => prevState + 1)
+}
+
+//-------------------------------
 const greenFinder = (secretArr,userContent)=>{
   for(let i = 0; i<5 ; i++)
   {
     if(userContent[i] === secretArr[i]){
-      
-      console.log(`${userContent[i]} marked as green`)
       userContent[i] = null;
       gridDispatcher(
         {
@@ -58,23 +130,19 @@ const greenFinder = (secretArr,userContent)=>{
         }
     
       )
-      //console.log('userContent is', userContent, userContent[i])
       secretArr[i] = null;
   }
   }
 
-  console.log('s*u: Green',userContent,secretArr)
   return [userContent, secretArr]
   }
   //------------------------------------
   const yellowFinder = (secretArr,userContent)=>{
   for(let i = 0; i< userContent.length ; i++){
-    //console.log(`i = ${i} and userContent length = ${userContent.length} `)
+    
     for(let j = 0; j< userContent.length; j++){
-      //console.log(`j = ${j} and userContent length = ${userContent.length} `)
-      //console.log(userContent[i],secretArr[j])
+     
       if(userContent[i] === secretArr[j] && userContent[i] !== null){
-        console.log(`${userContent[i]} marked as yellow`)
         gridDispatcher(
           {
             type: 'type2',
@@ -97,7 +165,6 @@ const greenFinder = (secretArr,userContent)=>{
    const greyFinder = (secretArr,userContent)=>{
   for(let i = 0; i< userContent.length; i++){
     if (userContent[i] !== null) {
-      console.log(`${userContent[i]} marked as grey`)
       gridDispatcher(
         {
           type: 'type2',
@@ -116,7 +183,6 @@ const greenFinder = (secretArr,userContent)=>{
 
 //--------------------------------------------------------------------
   const gridReduserFunc = (state, action) => {
-    console.log(state, action);
     switch (action.type) {
       case 'type1': { 
         state[action.currentRow][action.currentCell].content = action.content;
@@ -125,9 +191,9 @@ const greenFinder = (secretArr,userContent)=>{
       case 'type2': {
         state[action.currentRow][action.currentCell].status = action.status; 
         break;
-      }//
+      }
       default: {
-        state = state;
+       return  state 
         }
     }
     return state;
@@ -137,49 +203,31 @@ const greenFinder = (secretArr,userContent)=>{
   //--------------------CONTENT Update----------------------
   const contentUpdateHandler = (e) => {
     e.preventDefault();
-    console.log("button clicked",e.target.innerHTML);
-    if (flag >4) {
-      console.log(`cell is ${flag}`);
-      return;
-    }
-    e.preventDefault();
-    gridDispatcher({
-      type: 'type1',
-      currentRow,
-      currentCell,
-      content: e.target.innerHTML //Xxxx content should key pressed by user
-    })
-    setCurrentCell(prevState => (prevState + 1) % 5)
-    setFlag(prevState=>prevState+1)
-    console.log(currentRow,currentCell,"r,c");
+    setKeyPress([e.target.innerHTML]);
 
 }
-  
-  
-  
-
+ 
 //--------------Status color Update --------------------------------
   const statusUpdateHandler = () => {
+    if (currentRow ===  6) {
+      console.log("row limit exceede from su")
+      return;
+    }
     let secret = 'APPLE'
     let secretArr = secret.split('')
     let userContent = gridState[currentRow].map(state => state.content).filter(item=> item!=='')
-    console.log(userContent);
-    //let userContent = ['M','A','P','L','Y']
     if (userContent.length < 5) {
       console.log('enter 5 no');
       return; 
     }
-
     
     [userContent, secretArr]= greenFinder(secretArr,userContent);
     [userContent, secretArr]=yellowFinder(secretArr,userContent);
     greyFinder(secretArr,userContent);
 
-        setCurrentRow(currentRow + 1)
+    setCurrentRow(currentRow + 1)
+      console.log("Current row: " + currentRow);
         setFlag(0)
-   
-    
-    console.log(userContent)
   }
 
 //------------------------------------------------------------------------
@@ -188,7 +236,6 @@ const greenFinder = (secretArr,userContent)=>{
   const elements = gridState.map(row => {
    return( <div className="word-row">{
      row.map(cell => {
-       console.log(cell.status)
         return(
           <div className="word-cell" style={{ backgroundColor:  cell.status }}>{cell.content}</div>
         )
@@ -200,12 +247,13 @@ const greenFinder = (secretArr,userContent)=>{
   return (
     <div className="word-grid">
       <h1>Wordle</h1>
-      <div >
-        {elements}
-      </div>
       <KeyBoard
         contentUpdateHandler={contentUpdateHandler} />
       <button onClick={statusUpdateHandler}>ENTER</button>
+      <button onClick={deleteHandler}>Backspace</button>
+      <div >
+        {elements}
+        </div>
     </div>
   )
 };

@@ -3,8 +3,9 @@ import './App.css'
 import KeyBoard from './components/KeyBoard';
 /*
 to do:
-1.backspace button *
-2.keyboard color change
+1.fix app crash when press backspace immediately after an enterkey
+2. add game status (win or loss, alert messages)
+3. add word list with secrets and take a random word as secret
 */
 
 //---GRID------------------------
@@ -32,6 +33,28 @@ const App = () => {
   const [enterKey, setEnterKey] = useState(0)
   const [backspaceKey, setBackspaceKey] = useState(0)
   const [keyPress, setKeyPress] = useState([''])
+  const colorBoxReducer = (state, action) => {
+    switch (action.type) {
+      case 'green': {
+        state.green.push(action.content.charCodeAt(0))
+        break;
+      }
+      case 'yellow': {
+        state.yellow.push(action.content.charCodeAt(0))
+        break;
+      }
+      case 'grey': {
+        state.grey.push(action.content.charCodeAt(0))
+        break;
+      }
+    }
+    return state;
+  }
+  const [colorBox, colorBoxDispatcher] = useReducer(colorBoxReducer,
+  {
+    green : [], yellow : [], grey : []
+  })
+  
   const intializeGridState = gridGenerator()
 
 //-----------------------------------------------------------
@@ -119,7 +142,11 @@ useEffect(() => {
 const greenFinder = (secretArr,userContent)=>{
   for(let i = 0; i<5 ; i++)
   {
-    if(userContent[i] === secretArr[i]){
+    if (userContent[i] === secretArr[i]) {
+      colorBoxDispatcher({
+        type: 'green',
+        content: userContent[i]
+      })
       userContent[i] = null;
       gridDispatcher(
         {
@@ -142,13 +169,17 @@ const greenFinder = (secretArr,userContent)=>{
     
     for(let j = 0; j< userContent.length; j++){
      
-      if(userContent[i] === secretArr[j] && userContent[i] !== null){
+      if (userContent[i] === secretArr[j] && userContent[i] !== null) {
+        colorBoxDispatcher({
+          type: 'yellow',
+          content: userContent[i]
+        })
         gridDispatcher(
           {
             type: 'type2',
             currentRow,
             currentCell:i,
-            status: 'yellow'
+            status: '#d6ac04'
           }
       
         )
@@ -165,6 +196,10 @@ const greenFinder = (secretArr,userContent)=>{
    const greyFinder = (secretArr,userContent)=>{
   for(let i = 0; i< userContent.length; i++){
     if (userContent[i] !== null) {
+      colorBoxDispatcher({
+        type: 'grey',
+        content: userContent[i]
+      })
       gridDispatcher(
         {
           type: 'type2',
@@ -246,11 +281,11 @@ const greenFinder = (secretArr,userContent)=>{
   
   return (
     <div className="word-grid">
-      <h1>Wordle</h1>
+      <h1 className="heading">Wordle</h1>
       <KeyBoard
-        contentUpdateHandler={contentUpdateHandler} />
-      <button onClick={statusUpdateHandler}>ENTER</button>
-      <button onClick={deleteHandler}>Backspace</button>
+        contentUpdateHandler={contentUpdateHandler}  colorBox={colorBox}/>
+      <button className="other-keys" onClick={statusUpdateHandler}>ENTER</button>
+      <button  className="other-keys"onClick={deleteHandler}>Backspace</button>
       <div >
         {elements}
         </div>

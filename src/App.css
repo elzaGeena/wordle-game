@@ -23,7 +23,7 @@ body {
 }
 /* KeyBoard elements */
 .key-cell {
-  background-color: rgb(136, 22, 22);
+  /* background-color: rgb(136, 22, 22); */
   margin: 3px;
   height: 30px;
   width: 30px;
@@ -35,4 +35,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 10px;
+}
+.other-keys {
+  background-color: rgb(136, 22, 22);
+  height: 30px;
+  width: 100px;
+  border: transparent none;
+  color: wheat;
+  margin-left: 10px;
+  margin-bottom: 10px;
+}
+.heading {
+  color: wheat;
+  font-size: 40px;
 }

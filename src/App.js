@@ -3,9 +3,7 @@ import './App.css'
 import KeyBoard from './components/KeyBoard';
 /*
 to do:
-1.fix app crash when press backspace immediately after an enterkey
-2. add game status (win or loss, alert messages)
-3. add word list with secrets and take a random word as secret
+  add styles
 */
 
 //---GRID------------------------
@@ -25,6 +23,10 @@ const gridGenerator = () => {
   return grid;
 }
 
+let words = ["WATER","SOLID", "PRIME","TRUST","PIZZA","FRESH","HAPPY", "ENTRY","WORLD", "ANIME","FAITH"]
+
+
+
 //---------------------------------------
 const App = () => {
   const [currentRow,setCurrentRow] = useState(0)
@@ -33,6 +35,7 @@ const App = () => {
   const [enterKey, setEnterKey] = useState(0)
   const [backspaceKey, setBackspaceKey] = useState(0)
   const [keyPress, setKeyPress] = useState([''])
+  const [secret,setSecret] = useState("")
   const colorBoxReducer = (state, action) => {
     switch (action.type) {
       case 'green': {
@@ -77,8 +80,7 @@ const App = () => {
 
 useEffect(() => {
   window.addEventListener('keydown', handleKeyDown);
-
-  // cleanup this component
+  setSecret(words[Math.floor(Math.random() * words.length)])
   return () => {
   window.removeEventListener('keydown', handleKeyDown);
   };
@@ -100,7 +102,7 @@ useEffect(() => {
 //------------------------
   const deleteHandler = () => {
     console.log("delete key");
-    if (flag === 0 && currentRow === 0) { 
+    if (flag === 0 ) { 
       gridDispatcher({
         type: 'type1',
         currentRow,
@@ -120,12 +122,12 @@ useEffect(() => {
     });
 
   }
-
+//---------------------------------
 
 
   //--------------------
   const contentHandler = () => {
-    if (currentRow > 5 || flag>4 || keyPress[0] === '') {
+    if (currentRow > 5 || flag>4 || keyPress[0] === ''|| colorBox.green.length===10) {
       return;
     }
     gridDispatcher({
@@ -244,11 +246,10 @@ const greenFinder = (secretArr,userContent)=>{
  
 //--------------Status color Update --------------------------------
   const statusUpdateHandler = () => {
-    if (currentRow ===  6) {
+    if (currentRow ===  6 || colorBox.green.length===10) {
       console.log("row limit exceede from su")
       return;
     }
-    let secret = 'APPLE'
     let secretArr = secret.split('')
     let userContent = gridState[currentRow].map(state => state.content).filter(item=> item!=='')
     if (userContent.length < 5) {
@@ -284,8 +285,8 @@ const greenFinder = (secretArr,userContent)=>{
       <h1 className="heading">Wordle</h1>
       <KeyBoard
         contentUpdateHandler={contentUpdateHandler}  colorBox={colorBox}/>
-      <button className="other-keys" onClick={statusUpdateHandler}>ENTER</button>
-      <button  className="other-keys"onClick={deleteHandler}>Backspace</button>
+      <button className="other-keys" onClick={statusUpdateHandler}>Enter</button>
+      <button className="other-keys" onClick={deleteHandler}>Backspace</button>
       <div >
         {elements}
         </div>
